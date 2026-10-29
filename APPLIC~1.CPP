@@ -1,8 +1,8 @@
 /*
  * @Author: ELEGOO
- * @Date: 2019-10-22 11:59:09
- * @LastEditTime: 2021-02-25 15:42:05
- * @LastEditors: Changhua
+ * @Date: 2026-10-29 11:59:09
+ * @LastEditTime: 2026-10-29
+ * @LastEditors: Maimouna Fall
  * @Description: Smart Robot Car V4.0
  * @FilePath: 
  */
@@ -808,6 +808,115 @@ void ApplicationFunctionSet::ApplicationFunctionSet_Follow(void)
     ULTRASONIC_time = 0;
   }
 }
+// DELIVERY MODE (prototype, added to the ELEGOO V4.0 firmware)
+// Timed path + ultrasonic obstacle avoidance:
+//   IDLE -> MOVE <-> AVOID -> ARRIVED -> RETURN -> Standby
+void ApplicationFunctionSet::ApplicationFunctionSet_Delivery(void)
+{
+  enum DeliveryState
+  {
+    DEL_IDLE,
+    DEL_MOVE,
+    DEL_AVOID,
+    DEL_ARRIVED,
+    DEL_RETURN
+  };
+ 
+  // Tunable constants
+  const unsigned long TRAVEL_MS = 5000;     // forward driving time that counts as "arrived"
+  const unsigned long PAUSE_MS = 2000;      // stop at the destination (tray servo could open here)
+  const unsigned long AVOID_TURN_MS = 300;  // how long to turn away from an obstacle
+  const uint8_t DELIVERY_SPEED = 120;
+  const uint16_t OBSTACLE_CM = 20;
+ 
+  static DeliveryState state = DEL_IDLE;
+  static bool wasActive = false;
+  static unsigned long phaseStart = 0; // start time of the current timed phase
+  static unsigned long lastTick = 0;   // last time forwardMs was updated
+  static unsigned long forwardMs = 0;  // time actually spent driving forward
+ 
+  // Not in delivery mode: remember that, so the next entry starts fresh
+  if (Application_SmartRobotCarxxx0.Functional_Mode != Delivery_mode)
+  {
+    wasActive = false;
+    return;
+  }
+  // Fresh entry into delivery mode: reset everything (fixes the stale-state bug)
+  if (!wasActive)
+  {
+    wasActive = true;
+    state = DEL_IDLE;
+    forwardMs = 0;
+  }
+  // Same safety check as the other modes: stop if the car is lifted off the ground
+  if (Car_LeaveTheGround == false)
+  {
+    ApplicationFunctionSet_SmartRobotCarMotionControl(stop_it, 0);
+    return;
+  }
+ 
+  unsigned long now = _millis();
+ 
+  switch (state)
+  {
+  case DEL_IDLE:
+    lastTick = now;
+    state = DEL_MOVE;
+    break;
+ 
+  case DEL_MOVE:
+  {
+    uint16_t cm;
+    forwardMs += now - lastTick; // only counts time spent in MOVE
+    lastTick = now;
+    AppULTRASONIC.DeviceDriverSet_ULTRASONIC_Get(&cm);
+ 
+    if (forwardMs >= TRAVEL_MS)
+    {
+      state = DEL_ARRIVED;
+      phaseStart = now;
+    }
+    else if (cm <= OBSTACLE_CM)
+    {
+      state = DEL_AVOID;
+      phaseStart = now;
+    }
+    else
+    {
+      ApplicationFunctionSet_SmartRobotCarMotionControl(Forward, DELIVERY_SPEED);
+    }
+  }
+  break;
+ 
+  case DEL_AVOID: // non-blocking turn (no _delay)
+    ApplicationFunctionSet_SmartRobotCarMotionControl(Right, DELIVERY_SPEED);
+    if (now - phaseStart >= AVOID_TURN_MS)
+    {
+      lastTick = now; // don't count the turn as forward travel
+      state = DEL_MOVE;
+    }
+    break;
+ 
+  case DEL_ARRIVED: // "deliver": stop and wait
+    ApplicationFunctionSet_SmartRobotCarMotionControl(stop_it, 0);
+    if (now - phaseStart >= PAUSE_MS)
+    {
+      state = DEL_RETURN;
+      phaseStart = now;
+    }
+    break;
+ 
+  case DEL_RETURN: // reverse for as long as we drove forward
+    ApplicationFunctionSet_SmartRobotCarMotionControl(Backward, DELIVERY_SPEED);
+    if (now - phaseStart >= forwardMs)
+    {
+      ApplicationFunctionSet_SmartRobotCarMotionControl(stop_it, 0);
+      Application_SmartRobotCarxxx0.Functional_Mode = Standby_mode;
+    }
+    break;
+  }
+}
+
 
 /*舵机控制*/
 void ApplicationFunctionSet::ApplicationFunctionSet_Servo(uint8_t Set_Servo)
