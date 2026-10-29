@@ -49,7 +49,6 @@ A single run, one target, distances placed by hand with a ruler.
 
 **Next**: repeat with a fixed jig and a square target, check the sensor driver for a 150 cm limit, and calibrate the short-range offset.
 
-The script was developed with help from an AI assistant (Claude). I ran it, collected the data, and analyzed the results.
 
 ## 3. Delivery mode (prototype)
 
