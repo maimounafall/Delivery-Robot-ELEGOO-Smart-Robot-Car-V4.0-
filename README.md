@@ -3,6 +3,10 @@
 Personal project, Dec 2025 – present.
 I used an ELEGOO 4WD smart car kit (Arduino Uno based) to test the vendor firmware on real hardware, characterize its ultrasonic sensor, and prototype a delivery mode.
 
+<p align="center">
+  <img src="images/robot.jpg" alt="ELEGOO Smart Robot Car V4.0 with ultrasonic sensor on a servo, MPU6050 and camera module" width="400">
+</p>
+
 ---
 
 ## Repository structure
@@ -10,6 +14,7 @@ I used an ELEGOO 4WD smart car kit (Arduino Uno based) to test the vendor firmwa
 ```
 code/SmartRobotCarV4.0/        Arduino firmware (ELEGOO V4.0 code + my delivery mode)
 ultrasonic-characterization/   Sensor test: Python script, data and plots
+images/                        Photos of the robot
 README.md                      This file
 ```
 
