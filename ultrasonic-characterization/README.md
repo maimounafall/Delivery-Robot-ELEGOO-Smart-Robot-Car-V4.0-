@@ -1,6 +1,6 @@
 # Ultrasonic Sensor Characterization
 
-Automated accuracy test of the ultrasonic distance sensor on my ELEGOO Smart Robot Car V4.0, done before relying on it for obstacle avoidance in the [delivery robot](../) project.
+Automated accuracy test of the ultrasonic distance sensor on my ELEGOO Smart Robot Car V4.0, done before relying on it for obstacle avoidance in the [delivery robot](../README.md) project.
 
 **Main result:** the sensor under-reads by about 4 cm at short range, has a repeatable −14 cm error at 75 cm, and never reports more than 150 cm.
 
@@ -10,7 +10,7 @@ Automated accuracy test of the ultrasonic distance sensor on my ELEGOO Smart Rob
 
 - Sensor: ultrasonic module on the robot's Arduino-compatible board
 - Readings sent over serial (UART) to a Python script using `pyserial`
-- Target placed at 8 measured reference distances: 10, 20, 30, 50, 75, 100, 150 and 200 cm
+- Flat target (a book) placed at 8 measured reference distances: 10, 20, 30, 50, 75, 100, 150 and 200 cm
 - 20 readings per distance (160 total)
 
 ## Results
@@ -45,6 +45,6 @@ Full data: [`data/ultrasonic_results.csv`](data/ultrasonic_results.csv) (error =
 
 | File | Contents |
 |---|---|
-| `ultrasonic_test.py` | Python script that logs the readings over serial |
+| `ultrasonic_characterization.py` | Python script that sends `{"N":21,"D1":2,"H":"1"}` over serial and logs the distance returned |
 | `data/ultrasonic_results.csv` | Summary per distance: mean, std, min, max, error |
 | `figures/ultrasonic_results.png` | Measured vs. true distance (left) and error per distance (right) |
